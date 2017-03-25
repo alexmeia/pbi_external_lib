@@ -1,0 +1,25 @@
+{
+  "visual": {
+    "name": "pbiExtLib",
+    "displayName": "pbi-ext-lib",
+    "guid": "pbiExtLib674970E02A674676A1F130F651287CD0",
+    "visualClassName": "Visual",
+    "version": "1.0.0",
+    "description": "",
+    "supportUrl": "",
+    "gitHubUrl": ""
+  },
+  "apiVersion": "1.6.0",
+  "author": {
+    "name": "",
+    "email": ""
+  },
+  "assets": {
+    "icon": "assets/icon.png"
+  },
+  "externalJS": [],
+  "style": "style/visual.less",
+  "capabilities": "capabilities.json",
+  "dependencies": "dependencies.json",
+  "stringResources": []
+}
