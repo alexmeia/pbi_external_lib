@@ -10,8 +10,7 @@
   "files": [
     ".api/v1.6.0/PowerBI-visuals.d.ts",
     "typings/index.d.ts",
-    "node_modules/jquery/dist/jquery.js",
-    "node_modules/openlayers/dist/ol.js",
+    "typings/globals/openlayers/index.d.ts",
     "src/visual.ts"
   ]
 }

@@ -26,41 +26,64 @@
 
 module powerbi.extensibility.visual {
 
+    declare var ol: any;
+
     export class Visual implements IVisual {
 
-        private updateCountContainer: JQuery;
+        //private updateCountContainer: JQuery;
         
         private updateCount: number = 0;
-
+        public map: ol.Map;
+       
         constructor(options: VisualConstructorOptions) {
-            this.updateCountContainer = $('<div>');
-            $(options.element)
-                //Display jquery version in visual
-                .append(`<p>JQuery Version: <em>${$.fn.jquery}</em></p>`)
-                //Add container for update count
-                .append(this.updateCountContainer)
+            
+            let div = document.createElement("div");
+            div.setAttribute("id", "map");
+            options.element.appendChild(div);
 
-            $(options.element).append("<div id=\"map\"></div>");
-
-            //OpenLayers
+            let ol = (<any>window).ol;
             debugger
-            var map = new ol.Map({
-                //target: "map"
+            var osm_layer: ol.layer.Tile = new ol.layer.Tile({
+                source: new ol.source.OSM()
             });
-            debugger
-            var osmSource = new ol.source.OSM();
-            var osmLayer = new ol.layer.Tile({source: osmSource});
-            map.addLayer(osmLayer);
-
-            map.setView(new ol.View({
-                center: [0, 0],
-                zoom: 2
-            }));
+            
+            // note that the target cannot be set here!
+            this.map = new ol.Map({
+                target: "map",
+                layers: [osm_layer],
+                view: new ol.View({
+                    center: ol.proj.transform([0,0], 'EPSG:4326', 'EPSG:3857'),
+                    zoom: 2
+                })
+            });
         }
 
+        @logExceptions()
         public update(options: VisualUpdateOptions) {
+
+            
             //Display update count
-            this.updateCountContainer.html(`<p>Update count: <em>${(this.updateCount++)}</em></p>`)           
+            //OpenLayers
+            //this.map.setTarget(document.getElementById("map"));                      
+        }
+    }
+
+    // Logger --------------------------------------------------------------------------------- //
+
+     export function logExceptions(): MethodDecorator {
+        return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<Function>)
+            : TypedPropertyDescriptor<Function> {
+
+            return {
+                value: function () {
+                    try {
+                        return descriptor.value.apply(this, arguments);
+                    } catch (e) {
+                        console.error(e);
+                        throw e;
+                    }
+                }
+            }
         }
     }
 }
