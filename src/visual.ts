@@ -34,23 +34,32 @@ module powerbi.extensibility.visual {
         
         private updateCount: number = 0;
         public map: ol.Map;
+        private counter: number;
+
+        private osmLayer: ol.layer.Tile;
+        private vectorLayer: ol.layer.Vector;
+        private vectorSource: ol.source.Vector;
        
         constructor(options: VisualConstructorOptions) {
-            
+            this.counter = 0;
             let div = document.createElement("div");
             div.setAttribute("id", "map");
             options.element.appendChild(div);
 
             let ol = (<any>window).ol;
-            debugger
-            var osm_layer: ol.layer.Tile = new ol.layer.Tile({
+
+            this.vectorSource = new ol.source.Vector();
+            this.osmLayer = new ol.layer.Tile({
                 source: new ol.source.OSM()
+            });
+            this.vectorLayer = new ol.layer.Vector({
+                source: this.vectorSource
             });
             
             // note that the target cannot be set here!
             this.map = new ol.Map({
                 target: "map",
-                layers: [osm_layer],
+                layers: [this.osmLayer, this.vectorLayer],
                 view: new ol.View({
                     center: ol.proj.transform([0,0], 'EPSG:4326', 'EPSG:3857'),
                     zoom: 2
@@ -60,8 +69,18 @@ module powerbi.extensibility.visual {
 
         @logExceptions()
         public update(options: VisualUpdateOptions) {
-
+            debugger
+            let ol = (<any>window).ol;
+            this.counter ++;
+            let geom = new ol.geom.Polygon( [ [1600000 + this.counter,2200000 + this.counter],
+                                              [4400000 + this.counter,5500000 + this.counter],
+                                              [8800000 + this.counter,9000000 + this.counter] ] );
+            let feature = new ol.Feature({
+                name: "Feature_test",
+                geometry: geom
+            });
             
+            this.vectorSource.addFeature(feature);
             //Display update count
             //OpenLayers
             //this.map.setTarget(document.getElementById("map"));                      
