@@ -41,6 +41,7 @@ module powerbi.extensibility.visual {
         private vectorLayer: ol.layer.Vector;
 
         constructor(options: VisualConstructorOptions) {
+
             this.counter = 0;
             let div = document.createElement("div");
             div.setAttribute("id", "map");
@@ -69,8 +70,8 @@ module powerbi.extensibility.visual {
                 target: "map",
                 layers: [this.osmLayer, this.vectorLayer],
                 view: new ol.View({
-                    center: [0, 0],
-                    zoom: 3
+                    center: ol.proj.transform([11.6703, 43.1857], 'EPSG:4326', 'EPSG:3857'),
+                    zoom: 9
                 })
             });
 
@@ -79,6 +80,7 @@ module powerbi.extensibility.visual {
                 positioning: 'top-center',
                 stopEvent: false
             });
+
             this.map.addOverlay(popup);
 
             // display popup on click
@@ -111,9 +113,9 @@ module powerbi.extensibility.visual {
 
             this.counter++;
 
-            let geom = new ol.geom.Polygon([[1600000 + this.counter, 2200000 + this.counter],
-            [4400000 + this.counter, 5500000 + this.counter],
-            [8800000 + this.counter, 9000000 + this.counter]]);
+            let geom = new ol.geom.Polygon([[43.1857 + this.counter, 11.6703 + this.counter],
+            [44.18 + this.counter, 11.2 + this.counter],
+            [43.25 + this.counter, 10.25 + this.counter]]);
 
 
             let feature = new ol.Feature({

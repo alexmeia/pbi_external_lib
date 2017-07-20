@@ -1,13 +1,18 @@
 {
     "dataRoles": [
         {
-            "displayName": "Category Data",
-            "name": "category",
+            "displayName": "Ship ID",
+            "name": "Ship",
             "kind": "Grouping"
         },
         {
-            "displayName": "Measure Data",
-            "name": "measure",
+            "displayName": "Time",
+            "name": "Time",
+            "kind": "Measure"
+        },
+        {
+            "displayName": "Position",
+            "name": "Geo",
             "kind": "Measure"
         }
     ],
@@ -16,20 +21,13 @@
             "categorical": {
                 "categories": {
                     "for": {
-                        "in": "category"
-                    },
-                    "dataReductionAlgorithm": {
-                        "top": {}
+                        "in": "Ship"
                     }
                 },
                 "values": {
                     "select": [
-                        {
-                            "bind": {
-                                "to": "measure"
-                            }
-                        }
-                    ]
+                        { "for": { "in": "Geo" } }
+                    ]       
                 }
             }
         }
