@@ -52,8 +52,12 @@ module powerbi.extensibility.visual {
 
             let ol = (<any>window).ol;
 
+            let source = new ol.source.XYZ({ 
+                url: 'http://wms.transas.com/XYZ/1.0.0/utt-1612/{z}/{x}/{y}.png?token=fcdbc534-affd-4926-9489-f7de80f649bc' 
+                });
+
             this.osmLayer = new ol.layer.Tile({
-                source: new ol.source.OSM()
+                source: source
             });
             this.vectorLayer = new ol.layer.Vector({
                 source: new ol.source.Vector()
