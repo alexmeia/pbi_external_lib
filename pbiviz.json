@@ -17,7 +17,10 @@
   "assets": {
     "icon": "assets/icon.png"
   },
-  "externalJS": ["node_modules/openlayers/dist/ol.js"],
+  "externalJS": [
+    "node_modules/openlayers/dist/ol.js",
+    "node_modules/jquery/dist/jquery.js"
+  ],
   "style": "style/visual.less",
   "capabilities": "capabilities.json",
   "dependencies": "dependencies.json",

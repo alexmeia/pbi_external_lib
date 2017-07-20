@@ -11,6 +11,7 @@
     ".api/v1.6.0/PowerBI-visuals.d.ts",
     "typings/index.d.ts",
     "typings/globals/openlayers/index.d.ts",
+    "typings/globals/jquery/index.d.ts",
     "src/visual.ts"
   ]
 }

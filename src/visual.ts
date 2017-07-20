@@ -31,39 +31,72 @@ module powerbi.extensibility.visual {
     export class Visual implements IVisual {
 
         //private updateCountContainer: JQuery;
-        
+
         private updateCount: number = 0;
         public map: ol.Map;
         private counter: number;
 
         private osmLayer: ol.layer.Tile;
+        private rasterLayer: ol.layer.Tile;
         private vectorLayer: ol.layer.Vector;
-        private vectorSource: ol.source.Vector;
-       
+
         constructor(options: VisualConstructorOptions) {
             this.counter = 0;
             let div = document.createElement("div");
             div.setAttribute("id", "map");
             options.element.appendChild(div);
 
+            let popupDiv = document.createElement("div");
+            popupDiv.setAttribute("id", "pop-up");
+            div.appendChild(popupDiv);
+
             let ol = (<any>window).ol;
 
-            this.vectorSource = new ol.source.Vector();
             this.osmLayer = new ol.layer.Tile({
                 source: new ol.source.OSM()
             });
             this.vectorLayer = new ol.layer.Vector({
-                source: this.vectorSource
+                source: new ol.source.Vector()
             });
-            
+
+
             // note that the target cannot be set here!
             this.map = new ol.Map({
                 target: "map",
                 layers: [this.osmLayer, this.vectorLayer],
                 view: new ol.View({
-                    center: ol.proj.transform([0,0], 'EPSG:4326', 'EPSG:3857'),
-                    zoom: 2
+                    center: [0, 0],
+                    zoom: 3
                 })
+            });
+
+            let popup = new ol.Overlay({
+                element: popupDiv,
+                positioning: 'top-center',
+                stopEvent: false
+            });
+            this.map.addOverlay(popup);
+
+            // display popup on click
+            this.map.on('click', function (evt) {
+                debugger
+                var feature = this.forEachFeatureAtPixel(evt.pixel,
+                    function (feature, layer) {
+                        return feature;
+                    });
+                if (feature) {
+                    var geometry = feature.getGeometry();
+                    var coord = geometry.getCoordinates();
+                    popup.setPosition(coord);
+                    ($(popupDiv) as any).popover({
+                        'placement': 'top',
+                        'html': true,
+                        'content': feature.get('name')
+                    });
+                    ($(popupDiv) as any).popover('show');
+                } else {
+                    ($(popupDiv) as any).popover('destroy');
+                }
             });
         }
 
@@ -71,16 +104,40 @@ module powerbi.extensibility.visual {
         public update(options: VisualUpdateOptions) {
             debugger
             let ol = (<any>window).ol;
-            this.counter ++;
-            let geom = new ol.geom.Polygon( [ [1600000 + this.counter,2200000 + this.counter],
-                                              [4400000 + this.counter,5500000 + this.counter],
-                                              [8800000 + this.counter,9000000 + this.counter] ] );
+
+            this.counter++;
+
+            let geom = new ol.geom.Polygon([[1600000 + this.counter, 2200000 + this.counter],
+            [4400000 + this.counter, 5500000 + this.counter],
+            [8800000 + this.counter, 9000000 + this.counter]]);
+
+
             let feature = new ol.Feature({
                 name: "Feature_test",
                 geometry: geom
             });
-            
-            this.vectorSource.addFeature(feature);
+
+            //Icon
+            let iconFeature = new ol.Feature({
+                geometry: new ol.geom.Point(ol.proj.transform([11.6703, 43.1857], 'EPSG:4326', 'EPSG:3857')),
+                name: 'Da qualche parte in Italia',
+                population: 4000,
+                rainfall: 500
+            });
+
+            let iconStyle = new ol.style.Style({
+                image: new ol.style.Icon(/** @type {olx.style.IconOptions} */({
+                    anchor: [0.5, 22],
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'pixels',
+                    opacity: 1,
+                    src: 'http://oks.no/romerikskirken/wp-content/themes/oks/images/map-marker.png'
+                }))
+            });
+
+            iconFeature.setStyle(iconStyle);
+
+            this.vectorLayer.getSource().addFeature(iconFeature);
             //Display update count
             //OpenLayers
             //this.map.setTarget(document.getElementById("map"));                      
@@ -89,7 +146,7 @@ module powerbi.extensibility.visual {
 
     // Logger --------------------------------------------------------------------------------- //
 
-     export function logExceptions(): MethodDecorator {
+    export function logExceptions(): MethodDecorator {
         return function (target: Object, propertyKey: string, descriptor: TypedPropertyDescriptor<Function>)
             : TypedPropertyDescriptor<Function> {
 
