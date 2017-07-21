@@ -40,6 +40,8 @@ module powerbi.extensibility.visual {
         private rasterLayer: ol.layer.Tile;
         private vectorLayer: ol.layer.Vector;
 
+        private boatIconStyle: ol.style.Style;
+
         constructor(options: VisualConstructorOptions) {
 
             this.counter = 0;
@@ -53,9 +55,9 @@ module powerbi.extensibility.visual {
 
             let ol = (<any>window).ol;
 
-            let source = new ol.source.XYZ({ 
-                url: 'http://wms.transas.com/XYZ/1.0.0/utt-1612/{z}/{x}/{y}.png?token=fcdbc534-affd-4926-9489-f7de80f649bc' 
-                });
+            let source = new ol.source.XYZ({
+                url: 'http://wms.transas.com/XYZ/1.0.0/utt-1612/{z}/{x}/{y}.png?token=fcdbc534-affd-4926-9489-f7de80f649bc'
+            });
 
             this.osmLayer = new ol.layer.Tile({
                 source: source
@@ -75,6 +77,17 @@ module powerbi.extensibility.visual {
                 })
             });
 
+            // Styles
+            this.boatIconStyle = new ol.style.Style({
+                image: new ol.style.Icon(/** @type {olx.style.IconOptions} */({
+                    anchor: [0.5, 16],
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'pixels',
+                    opacity: 1,
+                    src: 'https://www2.phoops.it/powerbi/icons/arrow_up.png'
+                }))
+            });
+
             let popup = new ol.Overlay({
                 element: popupDiv,
                 positioning: 'top-center',
@@ -85,7 +98,6 @@ module powerbi.extensibility.visual {
 
             // display popup on click
             this.map.on('click', function (evt) {
-                debugger
                 var feature = this.forEachFeatureAtPixel(evt.pixel,
                     function (feature, layer) {
                         return feature;
@@ -108,19 +120,19 @@ module powerbi.extensibility.visual {
 
         @logExceptions()
         public update(options: VisualUpdateOptions) {
-            debugger
+
             let ol = (<any>window).ol;
 
             this.counter++;
 
-            let geom = new ol.geom.Polygon([[43.1857 + this.counter, 11.6703 + this.counter],
-            [44.18 + this.counter, 11.2 + this.counter],
-            [43.25 + this.counter, 10.25 + this.counter]]);
+            let geom = new ol.geom.Polygon([[11.1857 + this.counter, 43.6703 + this.counter],
+            [12.18 + this.counter, 44.2 + this.counter],
+            [13.25 + this.counter, 15.25 + this.counter]]);
 
 
             let feature = new ol.Feature({
                 name: "Feature_test",
-                geometry: geom
+                geometry: geom.transform('EPSG:4326', 'EPSG:3857')
             });
 
             //Icon
@@ -131,7 +143,7 @@ module powerbi.extensibility.visual {
                 rainfall: 500
             });
 
-            let iconStyle = new ol.style.Style({
+            let markerIconStyle = new ol.style.Style({
                 image: new ol.style.Icon(/** @type {olx.style.IconOptions} */({
                     anchor: [0.5, 22],
                     anchorXUnits: 'fraction',
@@ -141,12 +153,54 @@ module powerbi.extensibility.visual {
                 }))
             });
 
-            iconFeature.setStyle(iconStyle);
+            iconFeature.setStyle(markerIconStyle);
+
+
 
             this.vectorLayer.getSource().addFeature(iconFeature);
+            this.vectorLayer.getSource().addFeature(feature);
             //Display update count
             //OpenLayers
-            //this.map.setTarget(document.getElementById("map"));                      
+            //this.map.setTarget(document.getElementById("map")); 
+
+            var wkt: ol.format.WKT = new ol.format.WKT();
+
+            // add wkt geometry (only for debugging)
+            var polygon = wkt.readFeature(
+                'POLYGON((10.689697265625 -25.0927734375, 34.595947265625 ' +
+                '-20.1708984375, 38.814697265625 -35.6396484375, 13.502197265625 ' +
+                '-39.1552734375, 10.689697265625 -25.0927734375))');
+            polygon.getGeometry().transform('EPSG:4326', 'EPSG:3857');
+
+            this.vectorLayer.getSource().addFeature(polygon);
+
+            // Read table from dataView
+            let rows: DataViewTableRow[] = options.dataViews[0].table.rows;
+
+            rows.forEach((row, index) => {
+                debugger
+                let point = wkt.readGeometry(row[2]);
+                point.transform("EPSG:4326", "EPSG:3857");
+                let ship = row[0];
+
+                let pointIcon = new ol.Feature({
+                    geometry: point,
+                    name: "Ship " + ship
+                })
+
+                pointIcon.setStyle(this.boatIconStyle);
+
+                // if there is a value for heading
+                if (row[3] != null) {
+                    pointIcon.getStyle().getImage().setRotation(row[3]);
+                }
+                else {
+                    // only for debug
+                    pointIcon.getStyle().getImage().setRotation(14);
+                }
+
+                this.vectorLayer.getSource().addFeature(pointIcon);
+            });
         }
     }
 

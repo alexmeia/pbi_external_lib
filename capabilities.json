@@ -1,35 +1,22 @@
+
 {
     "dataRoles": [
         {
-            "displayName": "Ship ID",
-            "name": "Ship",
-            "kind": "Grouping"
-        },
-        {
-            "displayName": "Time",
-            "name": "Time",
-            "kind": "Measure"
-        },
-        {
-            "displayName": "Position",
-            "name": "Geo",
-            "kind": "Measure"
+            "displayName": "Values",
+            "name": "values",
+            "kind": "GroupingOrMeasure"
         }
     ],
+
     "dataViewMappings": [
         {
-            "categorical": {
-                "categories": {
-                    "for": {
-                        "in": "Ship"
-                    }
-                },
-                "values": {
-                    "select": [
-                        { "for": { "in": "Geo" } }
-                    ]       
+        "table": {
+            "rows": {
+                "for": {
+                    "in": "values"
                 }
             }
+        }
         }
     ]
 }
