@@ -42,8 +42,20 @@ module powerbi.extensibility.visual {
 
         private boatIconStyle: ol.style.Style;
 
-        constructor(options: VisualConstructorOptions) {
+        // column names
+        private shipIdCol: String = "shipid";
+        private timeCol: String = "timestamp";
+        private addInfoCol: String = "Additional_Info";
+        private sogCol: String = "SOG";
+        private headingCol: String = "heading";
+        private segmentIdCol: String = "SegmentId";
+        private geoCol: String = "Geo";
+        private geoIsExternalCol: String = "Geo_IsExternal";
+        private geoDescriptionCol: String = "Geo_Description";
 
+
+        constructor(options: VisualConstructorOptions) {
+            debugger
             this.counter = 0;
             let div = document.createElement("div");
             div.setAttribute("id", "map");
@@ -109,7 +121,7 @@ module powerbi.extensibility.visual {
                     ($(popupDiv) as any).popover({
                         'placement': 'top',
                         'html': true,
-                        'content': feature.get('name')
+                        'content': '<p>' + feature.get('name') + '</p>'
                     });
                     ($(popupDiv) as any).popover('show');
                 } else {
@@ -120,22 +132,27 @@ module powerbi.extensibility.visual {
 
         @logExceptions()
         public update(options: VisualUpdateOptions) {
+            debugger
+            // map the column indexes (columns order can't be defined)
+            // Read table from dataView
+            let rows: DataViewTableRow[] = options.dataViews[0].table.rows;
+            let columns: String[] = options.dataViews[0].table.columns.map(function(a) {return a.displayName});
+
+            let isValidDataView = columns.indexOf(this.shipIdCol) != -1 
+                                    && columns.indexOf(this.timeCol) != -1
+                                    && columns.indexOf(this.geoCol) != -1
+                                    && columns.indexOf(this.geoDescriptionCol) != -1 
+            
+            // reset the vector layer (the only layer that has features for now)
+            this.vectorLayer.getSource().clear();
+
+            if (!isValidDataView) {
+                return;
+            }
 
             let ol = (<any>window).ol;
 
-            this.counter++;
-
-            let geom = new ol.geom.Polygon([[11.1857 + this.counter, 43.6703 + this.counter],
-            [12.18 + this.counter, 44.2 + this.counter],
-            [13.25 + this.counter, 15.25 + this.counter]]);
-
-
-            let feature = new ol.Feature({
-                name: "Feature_test",
-                geometry: geom.transform('EPSG:4326', 'EPSG:3857')
-            });
-
-            //Icon
+            // Standard marker icon
             let iconFeature = new ol.Feature({
                 geometry: new ol.geom.Point(ol.proj.transform([11.6703, 43.1857], 'EPSG:4326', 'EPSG:3857')),
                 name: 'Da qualche parte in Italia',
@@ -155,13 +172,7 @@ module powerbi.extensibility.visual {
 
             iconFeature.setStyle(markerIconStyle);
 
-
-
             this.vectorLayer.getSource().addFeature(iconFeature);
-            this.vectorLayer.getSource().addFeature(feature);
-            //Display update count
-            //OpenLayers
-            //this.map.setTarget(document.getElementById("map")); 
 
             var wkt: ol.format.WKT = new ol.format.WKT();
 
@@ -174,14 +185,12 @@ module powerbi.extensibility.visual {
 
             this.vectorLayer.getSource().addFeature(polygon);
 
-            // Read table from dataView
-            let rows: DataViewTableRow[] = options.dataViews[0].table.rows;
-
+            // processing the actual table rows
             rows.forEach((row, index) => {
                 debugger
-                let point = wkt.readGeometry(row[2]);
+                let point = wkt.readGeometry(row[columns.indexOf(this.geoCol)]);
                 point.transform("EPSG:4326", "EPSG:3857");
-                let ship = row[0];
+                let ship = row[columns.indexOf(this.shipIdCol)];
 
                 let pointIcon = new ol.Feature({
                     geometry: point,
@@ -191,12 +200,14 @@ module powerbi.extensibility.visual {
                 pointIcon.setStyle(this.boatIconStyle);
 
                 // if there is a value for heading
-                if (row[3] != null) {
-                    pointIcon.getStyle().getImage().setRotation(row[3]);
+                let headingColIndex = columns.indexOf(this.headingCol);
+
+                if (headingColIndex != -1 && row[headingColIndex] != null) {
+                    pointIcon.getStyle().getImage().setRotation(row[headingColIndex]);
                 }
                 else {
                     // only for debug
-                    pointIcon.getStyle().getImage().setRotation(14);
+                    pointIcon.getStyle().getImage().setRotation(Math.PI / 2);
                 }
 
                 this.vectorLayer.getSource().addFeature(pointIcon);
